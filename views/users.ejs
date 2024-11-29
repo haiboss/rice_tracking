@@ -51,11 +51,11 @@
     </nav>
 
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Manage Users</h1>
+        <h1 class="text-center mb-4">Quản lý tài khoản</h1>
         <div class="row">
             <!-- Cột 1: Danh sách tài khoản -->
             <div class="col-md-7">
-                <h3>User List</h3>
+                <h3>Danh sách tài khoản</h3>
                 <table class="table table-bordered">
                     <thead class="table-primary">
                         <tr>
@@ -75,11 +75,11 @@
     
             <!-- Cột 2: Thêm / Sửa tài khoản -->
             <div class="col-md-5">
-                <h3 id="form-title">Add User</h3>
+                <h3 id="form-title">Thêm mới tài khoản</h3>
                 <form id="user-form">
                     <input type="hidden" id="user-id" />
                     <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
+                        <label for="name" class="form-label">Họ tên</label>
                         <input type="text" class="form-control" id="name" placeholder="Enter name" required>
                     </div>
                     <div class="mb-3">
@@ -87,27 +87,27 @@
                         <input type="email" class="form-control" id="email" placeholder="Enter email" required>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
+                        <label for="password" class="form-label">Mật khẩu</label>
                         <input type="password" class="form-control" id="password" placeholder="Enter password">
-                        <small class="text-muted">Leave blank to keep the current password when editing.</small>
+                        <small class="text-muted">Để trống khi sửa</small>
                     </div>
                     <div class="mb-3">
-                        <label for="role" class="form-label">Role</label>
+                        <label for="role" class="form-label">Quyền</label>
                         <select class="form-select" id="role" required>
-                            <option value="admin">Admin</option>
-                            <option value="farmer">Farmer</option>
+                            <option value="admin">Quản trị</option>
+                            <option value="farmer">Hộ nông dân</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="isEnable" class="form-label">Status</label>
+                        <label for="isEnable" class="form-label">Trạng thái</label>
                         <select class="form-select" id="isEnable" required>
-                            <option value="1">Enabled</option>
-                            <option value="0">Disabled</option>
+                            <option value="1">Kích hoạt</option>
+                            <option value="0">Khóa</option>
                         </select>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                        <button type="button" id="cancel-edit" class="btn btn-secondary d-none">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="action">Thêm</button>
+                        <button type="button" id="cancel-edit" class="btn btn-secondary d-none">Hủy</button>
                     </div>
                 </form>
             </div>

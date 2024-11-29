@@ -52,7 +52,8 @@ async function submitUser(event) {
     alert(result.message);
     document.getElementById("user-form").reset();
     document.getElementById("cancel-edit").classList.add("d-none");
-    document.getElementById("form-title").textContent = "Add User";
+    document.getElementById("form-title").textContent = "Thêm mới tài khoản";
+    document.getElementById("action").textContent = "Thêm";
     loadUsers();
   } catch (error) {
     console.error("Error submitting user:", error);
@@ -69,7 +70,8 @@ async function editUser(id) {
     document.getElementById("email").value = user.email;
     document.getElementById("role").value = user.role;
     document.getElementById("isEnable").value = user.isEnable;
-    document.getElementById("form-title").textContent = "Edit User";
+    document.getElementById("form-title").textContent = "Sửa tài khoản";
+    document.getElementById("action").textContent = "Sửa";
     document.getElementById("cancel-edit").classList.remove("d-none");
   } catch (error) {
     console.error("Error editing user:", error);
@@ -93,7 +95,8 @@ document.getElementById("user-form").addEventListener("submit", submitUser);
 document.getElementById("cancel-edit").addEventListener("click", () => {
   document.getElementById("user-form").reset();
   document.getElementById("cancel-edit").classList.add("d-none");
-  document.getElementById("form-title").textContent = "Add User";
+  document.getElementById("form-title").textContent = "Thêm mới tài khoản";
+  document.getElementById("action").textContent = "Thêm";
 });
 
 // Load users when the page loads

@@ -1,26 +1,42 @@
 let map;
+let marker; // Lưu trữ marker hiện tại
 
 function showMap(lat, lng) {
   const modal = new bootstrap.Modal(document.getElementById("mapModal"));
   modal.show();
+
+  // Đợi modal hiển thị xong rồi render bản đồ
   setTimeout(() => {
     const mapContainer = document.getElementById("map");
 
     if (!map) {
+      // Nếu map chưa được khởi tạo, tạo mới
       map = new google.maps.Map(mapContainer, {
         center: { lat, lng },
         zoom: 14,
       });
-    } else {
-      map.setCenter({ lat, lng });
-    }
 
-    new google.maps.Marker({
-      position: { lat, lng },
-      map,
-    });
+      // Thêm marker đầu tiên
+      marker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+      });
+    } else {
+      // Nếu map đã khởi tạo, cập nhật vị trí marker và trung tâm bản đồ
+      map.setCenter({ lat, lng });
+
+      if (marker) {
+        marker.setMap(null); // Xóa marker cũ
+      }
+
+      marker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+      });
+    }
   }, 500); // Đợi modal render hoàn chỉnh
 }
+
 function formatDate(dateString) {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("en-CA", {
