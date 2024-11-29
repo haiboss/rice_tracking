@@ -1,0 +1,105 @@
+/* General Body Styling */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-image: url('/images/bg.webp');
+    /* Background image */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    color: white;
+}
+
+/* Header Styling */
+.title {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 3em;
+    color: #f2f8f3;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);    
+}
+
+/* Form Styling */
+#search-form {
+    display: flex;
+    /* Align input and button horizontally */
+    align-items: center;
+    /* Center elements vertically */
+    justify-content: center;
+    /* Center form horizontally */
+    gap: 10px;
+    /* Space between input and button */
+    margin-top: 30px;
+}
+
+#batch-id {
+    flex: 1;
+    /* Allow input to grow */
+    max-width: 600px;
+    /* Limit input width */
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#search-form button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#search-form button:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+    /* Slight enlarge effect on hover */
+}
+
+/* Result Section Styling */
+#result {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1.2em;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #search-form {
+        flex-direction: column;
+        /* Stack input and button vertically on small screens */
+        gap: 15px;
+    }
+
+    #batch-id {
+        max-width: 100%;
+        /* Input takes full width */
+    }
+
+    #search-form button {
+        width: 100%;
+        /* Button takes full width */
+    }
+}
+.card {
+    margin: 0 auto;
+    /* Đảm bảo card được căn giữa */
+}
+
+.card-body p {
+    color: black;
+    /* Chữ màu đen */
+}
+
+.text-center {
+    text-align: center;
+}

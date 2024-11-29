@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Producer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Đặt kích thước cho bản đồ */
+        #map {
+            height: 300px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/admin">Admin Dashboard</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/user">Quản lý tài khoản</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/add-producer">Nhà sản xuất</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/add-transporter">Đơn vị vận chuyển</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/report">Báo cáo - thống kê</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> <!-- Icon người dùng -->
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li><a class="dropdown-item" href="/user/changepass">Đổi mật khẩu</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="/logout">Thoát</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Danh sách nhà sản xuất -->
+            <div class="col-md-6">
+                <h3 class="mb-4">Producer List</h3>
+                <div id="alert-area"></div>
+                <table class="table table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>#</th>
+                            <th>Tên nhà sản xuất</th>
+                            <th>Địa chỉ</th>
+                            <th>Vĩ độ</th>
+                            <th>Kinh độ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="producer-list">
+                        <!-- Dữ liệu từ backend sẽ được hiển thị ở đây -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Form thêm mới nhà sản xuất -->
+            <div class="col-md-6">
+                <h3 class="mb-4">Thêm mới</h3>
+                <form id="add-producer-form">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Tên nhà sàn xuất</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter producer name"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Địa chỉ</label>
+                        <textarea class="form-control" id="address" name="address" placeholder="Enter address" rows="3"
+                            required></textarea>
+                    </div>
+
+                    <!-- Bản đồ Google Maps -->
+                    <div id="map"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="lat" class="form-label">Vĩ độ</label>
+                            <input type="number" step="0.000001" class="form-control" id="lat" name="lat"
+                                placeholder="Latitude" required readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lng" class="form-label">Kinh độ</label>
+                            <input type="number" step="0.000001" class="form-control" id="lng" name="lng"
+                                placeholder="Longitude" required readonly>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Thêm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCEkVbebcw41A7K_g1RHPWXuOEUA2DhpxQ&callback=initMap" async defer></script>
+    <script src="/js/product.js"></script>
+</body>
+
+</html>
