@@ -32,22 +32,39 @@ const initializeBlockchain = async () => {
       const genesisBlock = blockchain.createGenesisBlock();
       blockchain.addBlock(genesisBlock);
       await saveBlockToDatabase(genesisBlock);
-      await saveCheckpointToDB(blockchain); // Lưu checkpoint mới
+      await saveCheckpointToDB(); // Lưu checkpoint mới
     } else {
       console.log("Tải blockchain từ database...");
 
+      // Kiểm tra tính hợp lệ của dữ liệu từ database
       const isValid = await isBlockchainValid(chain);
       if (!isValid) {
-        console.warn(
-          "Dữ liệu Blockchain không hợp lệ trong database. Đang khôi phục từ checkpoint..."
-        );
-        const recovered = await recoverFromCheckpoint();
-
-        if (!recovered) {
-          throw new Error("Không thể khôi phục từ checkpoint. Dừng hệ thống.");
+        console.error("Dữ liệu Blockchain không hợp lệ trong database.");
+        // Thử khôi phục từ checkpoint
+        const checkpoint = await recoverFromCheckpoint();
+        if (checkpoint && checkpoint.length > 0) {
+          console.warn("Dữ liệu bị hỏng. Đang khôi phục từ checkpoint...");
+          blockchain.chain = checkpoint.map(
+            (block) =>
+              new Block(
+                block.index,
+                block.timestamp,
+                block.data,
+                block.previousHash
+              )
+          );
+          console.log("Blockchain đã được khôi phục từ checkpoint.");
+        } else {
+          console.error(
+            "Checkpoint cũng bị hỏng. Tạo lại Genesis Block để hệ thống hoạt động."
+          );
+          const genesisBlock = blockchain.createGenesisBlock();
+          blockchain.chain = [genesisBlock];
+          await saveBlockToDatabase(genesisBlock);
+          await saveCheckpointToDB();
         }
       } else {
-        console.log("Blockchain hợp lệ trong database.");
+        console.log("Blockchain hợp lệ.");
         blockchain.chain = chain.map(
           (block) =>
             new Block(
@@ -58,20 +75,24 @@ const initializeBlockchain = async () => {
             )
         );
 
-        if (!blockchain.isChainValid()) {
-          throw new Error("Blockchain không hợp lệ sau khi tải từ database.");
-        }
-        await saveCheckpointToDB(blockchain);
+        await saveCheckpointToDB();
       }
     }
+
     scheduleCheckpoint();
     console.log(
-      "Blockchain đã được khởi tạo thành công. Số block: " +
-        blockchain.chain.length
+      "Blockchain đã được khởi tạo thành công. Số block:",
+      blockchain.chain.length
     );
   } catch (error) {
     console.error("Error initializing blockchain:", error);
-    throw error;
+    console.log(
+      "Không thể khôi phục hoặc tạo lại dữ liệu blockchain. Hệ thống sẽ hoạt động với Genesis Block mới."
+    );
+    const genesisBlock = blockchain.createGenesisBlock();
+    blockchain.chain = [genesisBlock];
+    await saveBlockToDatabase(genesisBlock);
+    await saveCheckpointToDB();
   }
 };
 
@@ -126,7 +147,7 @@ const recoverFromCheckpoint = async () => {
 const loadAllCheckpointsFromDB = async () => {
   return new Promise((resolve, reject) => {
     db.query(
-      "SELECT * FROM checkpoints ORDER BY created_at DESC",
+      "SELECT * FROM blockchain_checkpoint ORDER BY created_at DESC",
       (err, results) => {
         if (err) {
           console.error("Lỗi khi tải checkpoint từ database:", err);
@@ -153,7 +174,7 @@ const scheduleCheckpoint = () => {
     console.log("Checkpoint đã được lưu tự động (node-schedule).");
   });
 };
-const saveCheckpointToDB = async (blockchain) => {
+const saveCheckpointToDB = async () => {
   const checkpointData = JSON.stringify(blockchain.chain);
   db.query(
     "INSERT INTO blockchain_checkpoint (checkpoint_data) VALUES (?)",
@@ -166,37 +187,6 @@ const saveCheckpointToDB = async (blockchain) => {
       }
     }
   );
-};
-const loadCheckpointFromDB = async () => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      "SELECT checkpoint_data FROM blockchain_checkpoint ORDER BY created_at DESC LIMIT 1",
-      (err, rows) => {
-        if (err) {
-          console.error("Lỗi khi tải checkpoint từ DB:", err);
-          return reject(err);
-        }
-
-        if (rows.length === 0) {
-          console.log("Không có checkpoint nào trong DB.");
-          return resolve(null);
-        }
-
-        const chain = JSON.parse(rows[0].checkpoint_data);
-        resolve(
-          chain.map(
-            (block) =>
-              new Block(
-                block.index,
-                block.timestamp,
-                block.data,
-                block.previousHash
-              )
-          )
-        );
-      }
-    );
-  });
 };
 //--------------------------END Checkpoint --------------------------
 const generateQRCode = async (data) => {
