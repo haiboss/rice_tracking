@@ -29,9 +29,7 @@ const initializeBlockchain = async () => {
 
     if (!chain || chain.length === 0) {
       console.log("Blockchain trống. Tạo Genesis Block...");
-      const genesisBlock = blockchain.createGenesisBlock();
-      blockchain.addBlock(genesisBlock);
-      await saveBlockToDatabase(genesisBlock);
+      await saveBlockToDatabase(blockchain.chain[0]);
       await saveCheckpointToDB(); // Lưu checkpoint mới
     } else {
       console.log("Tải blockchain từ database...");
@@ -58,9 +56,7 @@ const initializeBlockchain = async () => {
           console.error(
             "Checkpoint cũng bị hỏng. Tạo lại Genesis Block để hệ thống hoạt động."
           );
-          const genesisBlock = blockchain.createGenesisBlock();
-          blockchain.chain = [genesisBlock];
-          await saveBlockToDatabase(genesisBlock);
+          await saveBlockToDatabase(blockchain.chain[0]);
           await saveCheckpointToDB();
         }
       } else {
@@ -74,8 +70,6 @@ const initializeBlockchain = async () => {
               block.previousHash
             )
         );
-
-        await saveCheckpointToDB();
       }
     }
 
@@ -89,9 +83,9 @@ const initializeBlockchain = async () => {
     console.log(
       "Không thể khôi phục hoặc tạo lại dữ liệu blockchain. Hệ thống sẽ hoạt động với Genesis Block mới."
     );
-    const genesisBlock = blockchain.createGenesisBlock();
-    blockchain.chain = [genesisBlock];
-    await saveBlockToDatabase(genesisBlock);
+    //const genesisBlock = blockchain.createGenesisBlock();
+    //blockchain.chain = [genesisBlock];
+    await saveBlockToDatabase(blockchain.chain[0]);
     await saveCheckpointToDB();
   }
 };
@@ -169,7 +163,7 @@ const loadAllCheckpointsFromDB = async () => {
 
 const scheduleCheckpoint = () => {
   // Lịch trình chạy mỗi 10 phút
-  schedule.scheduleJob("*/10 * * * *", async () => {
+  schedule.scheduleJob("*/20 * * * *", async () => {
     await saveCheckpointToDB(blockchain);
     console.log("Checkpoint đã được lưu tự động (node-schedule).");
   });
@@ -621,7 +615,6 @@ const loadBlockchainFromDatabase = async () => {
 };
 
 const isBlockchainValid = async (chain) => {
-  //const chain = await loadBlockchainFromDatabase();
   for (let i = 1; i < chain.length; i++) {
     const currentBlock = chain[i];
     const previousBlock = chain[i - 1];
