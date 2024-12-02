@@ -26,20 +26,20 @@ app.set("view engine", "ejs");
 const initializeBlockchain = async () => {
   try {
     const chain = await loadBlockchainFromDatabase();
-
+    //console.log(chain);
     if (!chain || chain.length === 0) {
       console.log("Blockchain trống. Tạo Genesis Block...");
       await saveBlockToDatabase(blockchain.chain[0]);
-      await saveCheckpointToDB(); // Lưu checkpoint mới
+      await saveCheckpointToDB();
     } else {
       console.log("Tải blockchain từ database...");
 
-      // Kiểm tra tính hợp lệ của dữ liệu từ database
       const isValid = await isBlockchainValid(chain);
       if (!isValid) {
         console.error("Dữ liệu Blockchain không hợp lệ trong database.");
         // Thử khôi phục từ checkpoint
         const checkpoint = await recoverFromCheckpoint();
+
         if (checkpoint && checkpoint.length > 0) {
           console.warn("Dữ liệu bị hỏng. Đang khôi phục từ checkpoint...");
           blockchain.chain = checkpoint.map(
@@ -56,6 +56,8 @@ const initializeBlockchain = async () => {
           console.error(
             "Checkpoint cũng bị hỏng. Tạo lại Genesis Block để hệ thống hoạt động."
           );
+          //const genesisBlock = blockchain.createGenesisBlock();
+          //blockchain.chain = [genesisBlock];
           await saveBlockToDatabase(blockchain.chain[0]);
           await saveCheckpointToDB();
         }
@@ -70,6 +72,7 @@ const initializeBlockchain = async () => {
               block.previousHash
             )
         );
+        await saveCheckpointToDB();
       }
     }
 
@@ -79,12 +82,10 @@ const initializeBlockchain = async () => {
       blockchain.chain.length
     );
   } catch (error) {
-    console.error("Error initializing blockchain:", error);
+    console.error("Lỗi khi khởi tạo Blockchain", error);
     console.log(
       "Không thể khôi phục hoặc tạo lại dữ liệu blockchain. Hệ thống sẽ hoạt động với Genesis Block mới."
     );
-    //const genesisBlock = blockchain.createGenesisBlock();
-    //blockchain.chain = [genesisBlock];
     await saveBlockToDatabase(blockchain.chain[0]);
     await saveCheckpointToDB();
   }
@@ -105,10 +106,12 @@ app.get("/", (req, res) => {
 const recoverFromCheckpoint = async () => {
   try {
     const checkpoints = await loadAllCheckpointsFromDB();
+
     for (const checkpoint of checkpoints) {
       console.log(
         `Đang kiểm tra checkpoint với số block: ${checkpoint.length}`
       );
+
       const chain = checkpoint.map(
         (block) =>
           new Block(
@@ -118,30 +121,32 @@ const recoverFromCheckpoint = async () => {
             block.previousHash
           )
       );
-      const tempBlockchain = new Blockchain();
-      tempBlockchain.chain = chain;
 
-      if (tempBlockchain.isChainValid()) {
+      // Kiểm tra tính hợp lệ của checkpoint
+      const isValid = await isBlockchainValid(chain);
+
+      if (!isValid) {
         console.log("Checkpoint hợp lệ. Đang khôi phục blockchain...");
-        blockchain.chain = chain;
-        return true;
+        return chain; // Trả về chuỗi hợp lệ
       } else {
         console.warn(
           "Checkpoint không hợp lệ. Tiếp tục kiểm tra checkpoint cũ hơn..."
         );
       }
     }
+
     console.error("Không có checkpoint hợp lệ. Dừng hệ thống.");
-    return false;
+    return null; // Trả về null nếu không tìm thấy checkpoint hợp lệ
   } catch (error) {
     console.error("Lỗi khi khôi phục từ checkpoint:", error);
     throw error;
   }
 };
+
 const loadAllCheckpointsFromDB = async () => {
   return new Promise((resolve, reject) => {
     db.query(
-      "SELECT * FROM blockchain_checkpoint ORDER BY created_at DESC",
+      "SELECT checkpoint_data FROM blockchain_checkpoint ORDER BY created_at DESC",
       (err, results) => {
         if (err) {
           console.error("Lỗi khi tải checkpoint từ database:", err);
@@ -149,7 +154,8 @@ const loadAllCheckpointsFromDB = async () => {
         }
         try {
           const checkpoints = results.map((row) => {
-            return JSON.parse(row.chain_data);
+            //console.log(row.checkpoint_data);
+            return row.checkpoint_data;
           });
           resolve(checkpoints);
         } catch (error) {
@@ -163,16 +169,16 @@ const loadAllCheckpointsFromDB = async () => {
 
 const scheduleCheckpoint = () => {
   // Lịch trình chạy mỗi 10 phút
-  schedule.scheduleJob("*/20 * * * *", async () => {
+  schedule.scheduleJob("*/10 * * * *", async () => {
     await saveCheckpointToDB(blockchain);
     console.log("Checkpoint đã được lưu tự động (node-schedule).");
   });
 };
 const saveCheckpointToDB = async () => {
-  const checkpointData = JSON.stringify(blockchain.chain);
+  const checkpointData = blockchain.chain; // Dữ liệu blockchain chain
   db.query(
     "INSERT INTO blockchain_checkpoint (checkpoint_data) VALUES (?)",
-    [checkpointData],
+    [JSON.stringify(checkpointData)], // Đảm bảo dữ liệu là chuỗi JSON hợp lệ
     (err) => {
       if (err) {
         console.error("Lỗi khi lưu checkpoint vào DB:", err);
@@ -182,6 +188,7 @@ const saveCheckpointToDB = async () => {
     }
   );
 };
+
 //--------------------------END Checkpoint --------------------------
 const generateQRCode = async (data) => {
   try {
@@ -548,7 +555,7 @@ const saveBlockToDatabase = async (block) => {
     const values = [
       block.index,
       new Date(block.timestamp).toISOString().slice(0, 19).replace("T", " "), // Chuyển đổi timestamp
-      JSON.stringify(block.data), // Chuyển đổi data sang JSON string
+      JSON.stringify(block.data),
       block.previousHash,
       block.hash,
     ];
@@ -588,7 +595,7 @@ const loadBlockchainFromDatabase = async () => {
               try {
                 parsedData = JSON.parse(row.data);
               } catch (error) {
-                console.error("Invalid JSON data in row:", row.data);
+                console.log("Invalid JSON data in row:", row.data);
                 throw new Error("Invalid JSON data in database");
               }
             } else {

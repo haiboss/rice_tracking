@@ -3,7 +3,7 @@ class Block {
   constructor(index, timestamp, data, previousHash = "") {
     this.index = index;
     this.timestamp = timestamp || new Date().toISOString();
-    this.data = typeof data === "string" ? JSON.parse(data) : data;
+    this.data = typeof data === "string" ? JSON.stringify(data) : data;
     this.previousHash = previousHash;
     this.hash = this.calculateHash();
   }
