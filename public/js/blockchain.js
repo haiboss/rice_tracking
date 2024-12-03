@@ -53,13 +53,11 @@ class Blockchain {
     for (let i = 1; i < this.chain.length; i++) {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
-
       // Kiểm tra hash hiện tại
       if (currentBlock.hash !== currentBlock.calculateHash()) {
         console.error(`Invalid hash at block index ${currentBlock.index}`);
         return false;
       }
-
       // Kiểm tra previousHash
       if (currentBlock.previousHash !== previousBlock.hash) {
         console.error(

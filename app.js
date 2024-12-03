@@ -90,18 +90,105 @@ const initializeBlockchain = async () => {
     await saveCheckpointToDB();
   }
 };
+//-----------------------------------------------------------------
 
-// Trang tra cứu thông tin gạo
-app.get("/", (req, res) => {
-  db.query("SELECT * FROM rice_batches", (err, results) => {
-    if (err) {
-      console.error("Database query error:", err);
-      res.status(500).send("Internal Server Error");
-      return;
-    }
-    res.render("index", { batches: results });
+const saveBlockToDatabase = async (block) => {
+  return new Promise((resolve, reject) => {
+    const sql = `INSERT INTO blockchain (\`index\`, timestamp, data, previousHash, hash) VALUES (?, ?, ?, ?, ?)`;
+    const values = [
+      block.index,
+      new Date(block.timestamp).toISOString().slice(0, 19).replace("T", " "), // Chuyển đổi timestamp
+      JSON.stringify(block.data),
+      block.previousHash,
+      block.hash,
+    ];
+
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        console.error("Error inserting block into database:", err);
+        return reject(err);
+      }
+      resolve(result);
+    });
   });
-});
+};
+
+const loadBlockchainFromDatabase = async () => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      `SELECT 
+        b.index,
+        b.timestamp,
+        b.data,
+        b.previousHash,
+        b.hash 
+      FROM blockchain b ORDER BY b.index ASC`,
+      (err, rows) => {
+        if (err) {
+          console.error("Error querying blockchain from database:", err);
+          return reject(err);
+        }
+
+        try {
+          const chain = rows.map((row) => {
+            let parsedData;
+
+            // Kiểm tra và parse JSON từ cột `data`
+            if (typeof row.data === "string") {
+              try {
+                parsedData = JSON.parse(row.data);
+              } catch (error) {
+                console.log("Invalid JSON data in row:", row.data);
+                throw new Error("Invalid JSON data in database");
+              }
+            } else {
+              parsedData = row.data;
+            }
+
+            // Tạo thể hiện của lớp Block
+            return new Block(
+              row.index,
+              row.timestamp,
+              parsedData,
+              row.previousHash
+            );
+          });
+
+          resolve(chain);
+        } catch (error) {
+          console.error("Error processing blockchain data:", error);
+          reject(error);
+        }
+      }
+    );
+  });
+};
+
+const isBlockchainValid = async (chain) => {
+  for (let i = 1; i < chain.length; i++) {
+    const currentBlock = chain[i];
+    const previousBlock = chain[i - 1];
+
+    if (
+      currentBlock.hash !==
+      new Block(
+        currentBlock.index,
+        currentBlock.timestamp,
+        currentBlock.data,
+        currentBlock.previousHash
+      ).calculateHash()
+    ) {
+      return false;
+    }
+
+    if (currentBlock.previousHash !== previousBlock.hash) {
+      return false;
+    }
+  }
+  return true;
+};
+
+//-----------------------------------------------------------------
 // --------------Checkpoint Block ---------------------------------------
 const recoverFromCheckpoint = async () => {
   try {
@@ -188,8 +275,6 @@ const saveCheckpointToDB = async () => {
     }
   );
 };
-
-//--------------------------END Checkpoint --------------------------
 const generateQRCode = async (data) => {
   try {
     const qrData = await QRCode.toDataURL(JSON.stringify(data));
@@ -199,6 +284,20 @@ const generateQRCode = async (data) => {
     throw error;
   }
 };
+//--------------------------END Checkpoint --------------------------
+
+// Trang tra cứu thông tin gạo
+app.get("/", (req, res) => {
+  db.query("SELECT * FROM rice_batches", (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+    res.render("index", { batches: results });
+  });
+});
+
 app.get("/blockchain/search/:numBatches", async (req, res) => {
   const { numBatches } = req.params;
   const block = blockchain.chain.find(
@@ -549,102 +648,6 @@ app.delete(
     );
   }
 );
-const saveBlockToDatabase = async (block) => {
-  return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO blockchain (\`index\`, timestamp, data, previousHash, hash) VALUES (?, ?, ?, ?, ?)`;
-    const values = [
-      block.index,
-      new Date(block.timestamp).toISOString().slice(0, 19).replace("T", " "), // Chuyển đổi timestamp
-      JSON.stringify(block.data),
-      block.previousHash,
-      block.hash,
-    ];
-
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("Error inserting block into database:", err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
-};
-
-const loadBlockchainFromDatabase = async () => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      `SELECT 
-        b.index,
-        b.timestamp,
-        b.data,
-        b.previousHash,
-        b.hash 
-      FROM blockchain b ORDER BY b.index ASC`,
-      (err, rows) => {
-        if (err) {
-          console.error("Error querying blockchain from database:", err);
-          return reject(err);
-        }
-
-        try {
-          const chain = rows.map((row) => {
-            let parsedData;
-
-            // Kiểm tra và parse JSON từ cột `data`
-            if (typeof row.data === "string") {
-              try {
-                parsedData = JSON.parse(row.data);
-              } catch (error) {
-                console.log("Invalid JSON data in row:", row.data);
-                throw new Error("Invalid JSON data in database");
-              }
-            } else {
-              parsedData = row.data;
-            }
-
-            // Tạo thể hiện của lớp Block
-            return new Block(
-              row.index,
-              row.timestamp,
-              parsedData,
-              row.previousHash
-            );
-          });
-
-          resolve(chain);
-        } catch (error) {
-          console.error("Error processing blockchain data:", error);
-          reject(error);
-        }
-      }
-    );
-  });
-};
-
-const isBlockchainValid = async (chain) => {
-  for (let i = 1; i < chain.length; i++) {
-    const currentBlock = chain[i];
-    const previousBlock = chain[i - 1];
-
-    if (
-      currentBlock.hash !==
-      new Block(
-        currentBlock.index,
-        currentBlock.timestamp,
-        currentBlock.data,
-        currentBlock.previousHash
-      ).calculateHash()
-    ) {
-      return false;
-    }
-
-    if (currentBlock.previousHash !== previousBlock.hash) {
-      return false;
-    }
-  }
-  return true;
-};
-
 // Duyệt lô gạo cho vào BlockChain
 app.put(
   "/farmer/batches/:id/approve",
@@ -1211,7 +1214,6 @@ app.post(
     );
   }
 );
-
 // Sửa người dùng
 app.put(
   "/admin/users/:id",
