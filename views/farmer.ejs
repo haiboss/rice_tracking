@@ -61,8 +61,8 @@
                             <th>Thương hiệu</th>
                             <th>Mã số vùng trồng</th>
                             <th>Sản xuất bởi</th>
-                            <th>Đơn vị vận chuyển</th>
-                            <th>Trạng thái</th>
+                            <th>Đơn vị vận chuyển</th>                          
+                            <th>QR Code</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -72,6 +72,22 @@
                 </table>
             </div>
     </div>
+    <!-- Modal hiển thị QRCode -->
+    <div class="modal fade" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="qrcodeModalLabel">Mã QR Code của lô gạo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="qrcodeImage" src="" alt="QR Code" class="img-fluid" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <div class="row">
         <!-- Nút ẩn/hiện -->
         <div class="col-md-12 mb-3 text-end">
@@ -155,7 +171,7 @@
             </form>
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script src="./js/farmer.js"> </script>
 </body>
 

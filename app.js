@@ -277,25 +277,26 @@ const saveCheckpointToDB = async () => {
 };
 const generateQRCode = async (data) => {
   try {
-    const qrData = await QRCode.toDataURL(JSON.stringify(data));
+    const qrData = await QRCode.toDataURL(data);
     return qrData; // Trả về chuỗi Base64 của QR Code
   } catch (error) {
     console.error("Error generating QR Code:", error);
     throw error;
   }
 };
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
 //--------------------------END Checkpoint --------------------------
 
 // Trang tra cứu thông tin gạo
 app.get("/", (req, res) => {
-  db.query("SELECT * FROM rice_batches", (err, results) => {
-    if (err) {
-      console.error("Database query error:", err);
-      res.status(500).send("Internal Server Error");
-      return;
-    }
-    res.render("index", { batches: results });
-  });
+  res.render("index");
 });
 
 app.get("/blockchain/search/:numBatches", async (req, res) => {
@@ -309,7 +310,18 @@ app.get("/blockchain/search/:numBatches", async (req, res) => {
       message: `Không tìm thấy thông tin cho mã số lô gạo: ${numBatches}`,
     });
   }
-  const qrCode = await generateQRCode(block.data); // Tạo QR Code từ dữ liệu block
+  const qrCodeData = `
+      Địa chỉ tra cứu: http://localhost:3000
+      Mã lô gạo: ${block.data.NumBatches}
+      Loại Gạo: ${block.data.rice_type}
+      Thương hiệu: ${block.data.brand}
+      Trong lượng: ${block.data.weight} kg
+      Chứng nhận: ${block.data.certifications}
+      Ngày hết hạn: ${formatDate(block.data.expiry_date)}
+      Sản xuất bởi: ${block.data.productBy}
+      Phân phối: ${block.data.transportBy}
+    `;
+  const qrCode = await generateQRCode(qrCodeData); // Tạo QR Code từ dữ liệu block
   // Nếu tìm thấy, trả về thông tin block
   res.json({
     success: true,
@@ -528,7 +540,31 @@ app.get(
     const { id } = req.params;
     const farmerEmail = req.user.email; // Email của farmer được xác định từ token
     db.query(
-      "SELECT * FROM rice_batches WHERE id = ? AND email = ?",
+      `SELECT 
+          r.id,
+          r.NumBatches,
+          r.rice_type,
+          r.expiry_date,
+          r.attributes,
+          r.weight,
+          r.certifications,
+          r.brand,
+          p.name AS productBy,
+          p.lat AS latProduct,
+          p.lng AS lngProduct,
+          t.name AS transportBy,
+          t.lat AS latTransport,
+          t.lng AS lngTransport,
+          r.blockchain_hash,
+          r.region_code
+        FROM 
+          rice_batches AS r
+        JOIN 
+          producers AS p ON r.produced_by = p.id
+        JOIN 
+          transporters AS t ON r.transported_by = t.id
+        WHERE 
+          r.id = ? AND r.email = ?`,
       [id, farmerEmail],
       (err, rows) => {
         if (err || rows.length === 0)
@@ -720,7 +756,7 @@ app.put(
 
           // Thêm block vào chuỗi blockchain trong bộ nhớ
           blockchain.addBlock(newBlock);
-
+          //const qrCode = await generateQRCode(newBlock.data);
           // Cập nhật blockchain_hash và NumBatches vào cơ sở dữ liệu
           db.query(
             "UPDATE rice_batches SET blockchain_hash = ?, NumBatches = ? WHERE id = ?",
@@ -736,6 +772,7 @@ app.put(
                 message: "Phê duyệt lô gạo thành công",
                 blockchainHash: newBlock.hash,
                 numBatches,
+                qrCode,
               });
             }
           );

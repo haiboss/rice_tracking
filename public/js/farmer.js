@@ -63,7 +63,9 @@ async function loadBatches(page = 1) {
       batchList.innerHTML += `
                 <tr>
                   <td>${batch.id}</td>
-                  <td>${batch.NumBatches}</td>
+                  <td>${
+                    batch.NumBatches ? batch.NumBatches : "n/a"
+                  }</td>                  
                   <td>${batch.rice_type}</td>
                   <td>${batch.attributes}</td>
                   <td>${formatDate(batch.expiry_date)}</td>
@@ -72,8 +74,14 @@ async function loadBatches(page = 1) {
                   <td>${batch.brand}</td>
                   <td>${batch.region_code}</td>
                   <td>${batch.productBy}</td>
-                  <td>${batch.transportBy}</td>
-                  <td>${batch.blockchain_hash ? "Approved" : "Pending"}</td>
+                  <td>${batch.transportBy}</td>                  
+                  <td>
+                  ${
+                    batch.blockchain_hash
+                      ? `<i class="bi bi-eye-fill text-primary" role="button" onclick="viewQRCode('${batch.id}')"></i>`
+                      : "Pending"
+                  }
+                  </td>
                   <td>
                     <button class="btn btn-sm btn-warning" onclick="editBatch(${
                       batch.id
@@ -96,6 +104,7 @@ async function loadBatches(page = 1) {
     console.error("Error loading batches:", error);
   }
 }
+
 function updatePagination(totalPages, currentPage) {
   const pagination = document.getElementById("pagination");
   pagination.innerHTML = "";
@@ -112,6 +121,57 @@ function updatePagination(totalPages, currentPage) {
     pagination.appendChild(button);
   }
 }
+const viewQRCode = async (batchId) => {
+  try {
+    // Gọi API backend để lấy thông tin lô gạo
+    const response = await fetch(`/farmer/batches/${batchId}`);
+    if (!response.ok) {
+      throw new Error("Không thể tải thông tin lô gạo.");
+    }
+
+    const batch = await response.json();
+
+    // Tạo QR code từ thông tin lô gạo
+    // const qrCodeData = JSON.stringify({
+    //   id: batch.id,
+    //   NumBatches: batch.NumBatches,
+    //   rice_type: batch.rice_type,
+    //   attributes: batch.attributes,
+    //   expiry_date: batch.expiry_date,
+    //   weight: batch.weight,
+    //   certifications: batch.certifications,
+    //   brand: batch.brand,
+    //   regionCode: batch.region_code,
+    //   productBy: batch.productBy,
+    //   productLat: batch.latProduct,
+    //   productLng: batch.lngProduct,
+    //   transportBy: batch.transportBy,
+    //   transportLat: batch.latTransport,
+    //   transportLng: batch.lngTransport,
+    // });
+    const qrCodeData = `
+      Địa chỉ tra cứu: http://localhost:3000
+      Mã lô gạo: ${batch.NumBatches}
+      Loại Gạo: ${batch.rice_type}
+      Thương hiệu: ${batch.brand}
+      Chứng nhận: ${batch.certifications}
+    `;
+
+    const qrCode = await QRCode.toDataURL(qrCodeData); // Sử dụng thư viện QRCode.js để tạo QRCode
+
+    // Hiển thị QR code trong modal
+    const qrcodeImage = document.getElementById("qrcodeImage");
+    qrcodeImage.src = qrCode;
+
+    const qrcodeModal = new bootstrap.Modal(
+      document.getElementById("qrcodeModal")
+    );
+    qrcodeModal.show();
+  } catch (error) {
+    console.error("Error fetching batch or generating QRCode:", error);
+    alert("Không thể tạo QRCode. Vui lòng thử lại!");
+  }
+};
 
 async function editBatch(id) {
   try {
