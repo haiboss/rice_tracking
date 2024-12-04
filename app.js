@@ -773,7 +773,30 @@ app.get("/admin/producers", authenticateToken, (req, res) => {
     res.json(results || []);
   });
 });
+// lấy thông tin nhà sản suất theo ID
+app.get(
+  "/admin/producers/:id",
+  authenticateToken,
+  authorizeRole("admin"),
+  (req, res) => {
+    const { id } = req.params;
 
+    db.query("SELECT * FROM producers WHERE id = ?", [id], (err, rows) => {
+      if (err) {
+        console.error("Error fetching transporter by ID:", err);
+        return res
+          .status(500)
+          .json({ message: "Có lỗi khi lấy thông tin nhà sản xuất" });
+      }
+
+      if (rows.length === 0) {
+        return res.status(404).json({ message: "Không tìm thấy thông tin" });
+      }
+
+      res.json(rows[0]); // Trả về thông tin nhà vận chuyển
+    });
+  }
+);
 // Route xử lý thêm nhà sản xuất
 app.post(
   "/admin/add-producer",
@@ -785,7 +808,7 @@ app.post(
     if (!name || !address || !lat || !lng) {
       return res
         .status(400)
-        .json({ success: false, message: "All fields are required." });
+        .json({ success: false, message: "Vui lòng nhập đầy đủ thông tin ." });
     }
 
     const sql =
@@ -797,12 +820,45 @@ app.post(
         console.error("Database Error:", err);
         return res
           .status(500)
-          .json({ success: false, message: "Failed to add producer." });
+          .json({ success: false, message: "Lỗi khi thêm nhà sản xuất." });
       }
-      res.json({ success: true, message: "Producer added successfully." });
+      res.json({ success: true, message: "Thêm nhà sản xuất thành công." });
     });
   }
 );
+app.put("/admin/producer/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, address, lat, lng } = req.body;
+
+  const sql = `UPDATE producers SET name = ?, address = ?, lat = ?, lng = ? WHERE id = ?`;
+  db.query(sql, [name, address, lat, lng, id], (err) => {
+    if (err) {
+      console.error("Error updating producer:", err);
+      return res.status(500).json({ message: "Lỗi khi sửa nhà sản xuất" });
+    }
+    res.json({ message: "Sửa nhà sản xuất thành công" });
+  });
+});
+
+app.delete(
+  "/admin/producer/:id",
+  authenticateToken,
+  authorizeRole("admin"),
+  (req, res) => {
+    const { id } = req.params;
+
+    const sql = `DELETE FROM producers WHERE id = ?`;
+    db.query(sql, [id], (err, result) => {
+      if (err) {
+        console.error("Error deleting producer:", err);
+        return res.status(500).json({ message: "Lỗi khi xóa nhà sản xuất" });
+      }
+
+      res.json({ message: "Xóa nhà sản xuất thành công", result });
+    });
+  }
+);
+
 //--------------------------------END API Nhà cung cấp -----------------------------
 //--------------------------------API đơn vị vận chuyển --------------------------------------
 app.get(

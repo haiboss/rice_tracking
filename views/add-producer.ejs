@@ -71,6 +71,7 @@
                             <th>Địa chỉ</th>
                             <th>Vĩ độ</th>
                             <th>Kinh độ</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody id="producer-list">
@@ -81,37 +82,38 @@
 
             <!-- Form thêm mới nhà sản xuất -->
             <div class="col-md-6">
-                <h3 class="mb-4">Thêm mới</h3>
+                <h3 class="mb-4"  id="form-title">Thêm mới</h3>
                 <form id="add-producer-form">
+                    <input type="hidden" id="producer-id" name="id" />
                     <div class="mb-3">
-                        <label for="name" class="form-label">Tên nhà sàn xuất</label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="nhập nhà sàn xuất"
-                            required>
+                        <label for="name" class="form-label">Tên nhà sản xuất</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Nhập nhà sản xuất" required>
                     </div>
                     <div class="mb-3">
                         <label for="address" class="form-label">Địa chỉ</label>
                         <textarea class="form-control" id="address" name="address" placeholder="Nhập địa chỉ" rows="3"
                             required></textarea>
                     </div>
-
-                    <!-- Bản đồ Google Maps -->
+                
                     <div id="map"></div>
-
+                
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="lat" class="form-label">Vĩ độ</label>
-                            <input type="number" step="0.000001" class="form-control" id="lat" name="lat"
-                                placeholder="Latitude" required readonly>
+                            <input type="number" step="0.000001" class="form-control" id="lat" name="lat" placeholder="Latitude"
+                                required readonly>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="lng" class="form-label">Kinh độ</label>
-                            <input type="number" step="0.000001" class="form-control" id="lng" name="lng"
-                                placeholder="Longitude" required readonly>
+                            <input type="number" step="0.000001" class="form-control" id="lng" name="lng" placeholder="Longitude"
+                                required readonly>
                         </div>
-                    </div>
+                    </div>                    
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Thêm</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">Thêm</button>
+                        <button type="button" class="btn btn-secondary d-none" id="cancel-edit">Hủy</button>
                     </div>
+
                 </form>
             </div>
         </div>
