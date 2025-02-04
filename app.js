@@ -334,7 +334,8 @@ app.get("/blockchain/search/:numBatches", async (req, res) => {
 //--------------------------------API login/logout/phân quyền -------------------------------------
 // đăng nhập
 app.get("/login", (req, res) => {
-  res.render("login");
+  const error = req.query.error || ""; // Lấy thông báo lỗi từ query string
+  res.render("login", { error });
 });
 
 app.post("/login", (req, res) => {
@@ -343,14 +344,15 @@ app.post("/login", (req, res) => {
   // Kiểm tra thông tin từ cơ sở dữ liệu
   db.query("SELECT * FROM users WHERE email = ?", [email], (err, rows) => {
     if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.redirect(
+        "/login?error=Không tồn tại tài khoản với địa chỉ email này"
+      );
     }
 
     if (rows.length === 0) {
-      return res
-        .status(401)
-        .json({ message: "Địa chỉ email và mật khẩu không hợp lệ" }); // Email không tồn tại
+      return res.redirect(
+        "/login?error=Không tồn tại tài khoản với địa chỉ email này"
+      );
     }
 
     const user = rows[0];
@@ -362,9 +364,9 @@ app.post("/login", (req, res) => {
       }
 
       if (!result) {
-        return res
-          .status(401)
-          .json({ message: "Địa chỉ email và mật khẩu không hợp lệ" }); // Mật khẩu sai
+        return res.redirect(
+          "/login?error=Địa chỉ email và mật khẩu không hợp lệ"
+        );
       }
 
       // Tạo token JWT khi thông tin chính xác
