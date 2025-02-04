@@ -59,7 +59,7 @@ async function fetchStatistics() {
     // Biểu đồ 3: Số lượng Farmers
     console.log("Creating Farmer Chart...");
     const farmerLabel = document.getElementById("farmerChart");
-    farmerLabel.textContent = `Tổng số hộ dân: ${stats.farmers}`;
+    farmerLabel.textContent = `Tổng số người dùng: ${stats.farmers}`;
     // new Chart(farmerCtx, {
     //   type: "bar",
     //   data: {
