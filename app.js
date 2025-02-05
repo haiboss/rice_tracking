@@ -1297,11 +1297,12 @@ app.post(
   "/admin/users",
   authenticateToken,
   authorizeRole("admin"),
-  (req, res) => {
+  async (req, res) => {
     const { name, email, password, role, isEnable } = req.body;
+    const pass = await bcrypt.hashSync(password, 10);
     db.query(
       "INSERT INTO users (name, email, password, role, isEnable) VALUES (?, ?, ?, ?, ?)",
-      [name, email, password, role, isEnable],
+      [name, email, pass, role, isEnable],
       (err) => {
         if (err) return res.status(500).json({ message: "Lỗi thêm tài khoản" });
         res.json({ message: "Thêm tài khoản thành công" });
@@ -1314,7 +1315,7 @@ app.put(
   "/admin/users/:id",
   authenticateToken,
   authorizeRole("admin"),
-  (req, res) => {
+  async (req, res) => {
     const { id } = req.params;
     const { name, email, password, role, isEnable } = req.body;
 
@@ -1329,9 +1330,10 @@ app.put(
       fields.push("email = ?");
       values.push(email);
     }
+    const pass = await bcrypt.hash(password, 10);
     if (password) {
       fields.push("password = ?");
-      values.push(password);
+      values.push(pass);
     }
     if (role) {
       fields.push("role = ?");
