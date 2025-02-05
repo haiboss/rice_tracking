@@ -12,7 +12,7 @@ async function loadUsers() {
               <td>${user.name}</td>
               <td>${user.email}</td>
               <td>${user.role}</td>
-              <td>${user.isEnable ? "Enabled" : "Disabled"}</td>
+              <td>${user.isEnable ? "Cho phép" : "Khóa"}</td>
               <td>
                 <button class="btn btn-sm btn-warning" onclick="editUser(${
                   user.id
@@ -79,7 +79,7 @@ async function editUser(id) {
 }
 
 async function deleteUser(id) {
-  if (!confirm("Bạn có muốn khóa tài khoan này không?")) return;
+  if (!confirm("Bạn có muốn khóa tài khoản này không?")) return;
 
   try {
     const response = await fetch(`/admin/users/${id}`, { method: "DELETE" });

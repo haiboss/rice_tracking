@@ -342,52 +342,56 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   // Kiểm tra thông tin từ cơ sở dữ liệu
-  db.query("SELECT * FROM users WHERE email = ?", [email], (err, rows) => {
-    if (err) {
-      return res.redirect(
-        "/login?error=Không tồn tại tài khoản với địa chỉ email này"
-      );
-    }
-
-    if (rows.length === 0) {
-      return res.redirect(
-        "/login?error=Không tồn tại tài khoản với địa chỉ email này"
-      );
-    }
-
-    const user = rows[0];
-
-    // So sánh mật khẩu đã băm
-    bcrypt.compare(password, user.password, (err, result) => {
+  db.query(
+    "SELECT * FROM users WHERE email = ? and isEnable=1",
+    [email],
+    (err, rows) => {
       if (err) {
-        return res.status(500).json({ message: "Internal server error" });
-      }
-
-      if (!result) {
         return res.redirect(
-          "/login?error=Địa chỉ email và mật khẩu không hợp lệ"
+          "/login?error=Không tồn tại tài khoản với địa chỉ email này"
         );
       }
 
-      // Tạo token JWT khi thông tin chính xác
-      const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
-        "Vnpt#@123456!",
-        { expiresIn: "1h" }
-      );
-
-      res.cookie("token", token, { httpOnly: true });
-
-      // Điều hướng theo vai trò
-      if (user.role === "admin") {
-        return res.redirect("/admin");
-      } else if (user.role === "farmer") {
-        return res.redirect("/farmer");
-      } else {
-        return res.status(403).json({ message: "Không có quyền truy cập" });
+      if (rows.length === 0) {
+        return res.redirect(
+          "/login?error=Không tồn tại tài khoản với địa chỉ email này"
+        );
       }
-    });
-  });
+
+      const user = rows[0];
+
+      // So sánh mật khẩu đã băm
+      bcrypt.compare(password, user.password, (err, result) => {
+        if (err) {
+          return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (!result) {
+          return res.redirect(
+            "/login?error=Địa chỉ email và mật khẩu không hợp lệ"
+          );
+        }
+
+        // Tạo token JWT khi thông tin chính xác
+        const token = jwt.sign(
+          { id: user.id, email: user.email, role: user.role },
+          "Vnpt#@123456!",
+          { expiresIn: "1h" }
+        );
+
+        res.cookie("token", token, { httpOnly: true });
+
+        // Điều hướng theo vai trò
+        if (user.role === "admin") {
+          return res.redirect("/admin");
+        } else if (user.role === "farmer") {
+          return res.redirect("/farmer");
+        } else {
+          return res.status(403).json({ message: "Không có quyền truy cập" });
+        }
+      });
+    }
+  );
 });
 
 // logout
@@ -774,7 +778,6 @@ app.put(
                 message: "Phê duyệt lô gạo thành công",
                 blockchainHash: newBlock.hash,
                 numBatches,
-                qrCode,
               });
             }
           );
